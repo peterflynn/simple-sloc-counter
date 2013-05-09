@@ -1,0 +1,7 @@
+{
+    "name": "pflynn.sloc-counter",
+    "title": "Lines of Code (SLOC) Counter",
+    "version": "1.0.0",
+    "engines": { "brackets": ">=0.15" },
+    "description": "Counts the number of files, lines, and lines of code (excluding whitespace/comments) in your project. Supports exclusions. To get started, choose View > Lines of Code Count."
+}
