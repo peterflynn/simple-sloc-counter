@@ -217,7 +217,7 @@ define(function (require, exports, module) {
                         
                         message += "</div>";
                         
-                        Dialogs.showModalDialog(Dialogs.DIALOG_ID_ERROR, "Lines of Code", message);
+                        Dialogs.showModalDialog(Dialogs.DIALOG_ID_ERROR, "JavaScript Lines of Code", message);
                     });
             });
     }
@@ -226,7 +226,7 @@ define(function (require, exports, module) {
     
     // Register command
     var COMMAND_ID = "pflynn.count_sloc";
-    CommandManager.register("Lines of Code Count", COMMAND_ID, countAllFiles);
+    CommandManager.register("Lines of JS Code Count", COMMAND_ID, countAllFiles);
     
     var menu = Menus.getMenu(Menus.AppMenuBar.VIEW_MENU);
     menu.addMenuItem(COMMAND_ID, null, Menus.LAST);
