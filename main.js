@@ -37,31 +37,25 @@ define(function (require, exports, module) {
         CommandManager          = brackets.getModule("command/CommandManager");
     
     
+    /* E.g., for Brackets core source:
+            /extensions/dev/       (want to exclude any personal code...)
+            /thirdparty/
+            /3rdparty/
+            /node_modules/
+            /widgets/bootstrap-
+            /unittest-files/
+            /spec/JSUtils-test-files/
+            /perf/OpenFile-perf-files/
+     */
+    var filterStrings = [];
+    
     function filter(fileInfo) {
         var path = fileInfo.fullPath;
-        if (path.indexOf("/extensions/dev/") !== -1) {  // in THIS case, want to exclude any personal code...
-            return false;
-        }
-        if (path.indexOf("/thirdparty/") !== -1) {
-            return false;
-        }
-        if (path.indexOf("/3rdparty/") !== -1) {
-            return false;
-        }
-        if (path.indexOf("/node_modules/") !== -1) {
-            return false;
-        }
-        if (path.indexOf("/widgets/bootstrap-") !== -1) {
-            return false;
-        }
-        if (path.indexOf("/unittest-files/") !== -1) {
-            return false;
-        }
-        if (path.indexOf("/spec/JSUtils-test-files/") !== -1) {
-            return false;
-        }
-        if (path.indexOf("/perf/OpenFile-perf-files/") !== -1) {
-            return false;
+        var i;
+        for (i = 0; i < filterStrings.length; i++) {
+            if (path.indexOf(filterStrings[i]) !== -1) {
+                return false;
+            }
         }
         return true;
     }
@@ -203,7 +197,7 @@ define(function (require, exports, module) {
                         var message = "<div style='-webkit-user-select:text; cursor: auto'>";
                         
                         message +=
-                            "Scanned " + totalFiles + " files (" + totalKb + " KB).<br>" +
+                            "Scanned " + totalFiles + " .js files (" + totalKb + " KB).<br>" +
                             "Raw total lines: " + totalLines + "<br>" +
                             "<b>Lines of code: " + totalSloc + "</b>&nbsp; (excluding whitespace & comments)";
                         
@@ -222,11 +216,38 @@ define(function (require, exports, module) {
             });
     }
     
+    function beginCount() {
+        var $textarea;
+        var message = "Exclude files/folders containing any of these substrings:<br><textarea id='sloc-excludes' style='width:400px;height:160px'>";
+        Dialogs.showModalDialog(Dialogs.DIALOG_ID_ERROR, "JavaScript Lines of Code", message)
+            .done(function (btnId) {
+                if (btnId === Dialogs.DIALOG_BTN_OK) {  // as opposed so dialog's "X" button
+                    var substrings = $textarea.val();
+                    filterStrings = substrings.split("\n");
+                    filterStrings = filterStrings.map(function (substr) {
+                        return substr.trim();
+                    });
+                    filterStrings = filterStrings.filter(function (substr) {
+                        return substr !== "";
+                    });
+                    
+                    countAllFiles();
+                }
+            });
+        
+        // store now since it'll be orphaned by the time done() handler runs
+        $textarea = $("#sloc-excludes");
+        
+        // prepopulate with last-used filter within session
+        // TODO: save/restore last-used string in prefs
+        $textarea.val(filterStrings.join("\n"));
+    }
+    
     
     
     // Register command
     var COMMAND_ID = "pflynn.count_sloc";
-    CommandManager.register("Lines of JS Code Count", COMMAND_ID, countAllFiles);
+    CommandManager.register("Lines of JS Code Count", COMMAND_ID, beginCount);
     
     var menu = Menus.getMenu(Menus.AppMenuBar.VIEW_MENU);
     menu.addMenuItem(COMMAND_ID, null, Menus.LAST);
