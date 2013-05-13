@@ -1,8 +1,12 @@
 JS Source Lines of Code (SLOC) Counter for Brackets
 ===================================================
-Counts the number of JavaScript files, lines, and lines of code (excluding whitespace/comments) in your project. You can exclude third-party code such as jQuery by specifying file / folder names.
+Counts the number of JavaScript files, lines, and lines of code (excluding whitespace/comments) in your project. You can exclude
+third-party code such as jQuery by specifying file / folder names.
 
-To get started, just choose _View > Lines of Code Count_
+To get started, just choose _View > Lines of Code Count_.
+
+_Limitations:_ currently uses a fairly quick and dirty way to check for comments. In cases where this simple implementation can't
+be sure whether code is a comment or not, the file will be omitted from the count and you'll see a warning at the end.
 
 How to Install
 ==============

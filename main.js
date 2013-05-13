@@ -29,6 +29,7 @@ define(function (require, exports, module) {
     
     // Brackets modules
     var DocumentManager         = brackets.getModule("document/DocumentManager"),
+        EditorManager           = brackets.getModule("editor/EditorManager"),
         FileIndexManager        = brackets.getModule("project/FileIndexManager"),
         StatusBar               = brackets.getModule("widgets/StatusBar"),
         Async                   = brackets.getModule("utils/Async"),
@@ -211,7 +212,8 @@ define(function (require, exports, module) {
                         
                         message += "</div>";
                         
-                        Dialogs.showModalDialog(Dialogs.DIALOG_ID_ERROR, "JavaScript Lines of Code", message);
+                        Dialogs.showModalDialog(Dialogs.DIALOG_ID_ERROR, "JavaScript Lines of Code", message)
+                            .done(function () { EditorManager.focusEditor(); });
                     });
             });
     }
@@ -241,6 +243,7 @@ define(function (require, exports, module) {
         // prepopulate with last-used filter within session
         // TODO: save/restore last-used string in prefs
         $textarea.val(filterStrings.join("\n"));
+        $textarea.focus();
     }
     
     
