@@ -1,5 +1,5 @@
-JS Source Lines of Code (SLOC) Counter for Brackets
-===================================================
+JS Lines of Code Counter (SLOC) for Brackets
+============================================
 Counts the number of JavaScript files, lines, and lines of code (excluding whitespace/comments) in your project. You can exclude
 third-party code such as jQuery by specifying file / folder names.
 
@@ -12,10 +12,10 @@ How to Install
 ==============
 SLOC Counter is an extension for [Brackets](https://github.com/adobe/brackets/), a new open-source code editor for the web.
 
-To use SLOC Counter:
+To install extensions:
 
-1. Choose _File > Install Extension_
-2. Enter this URL: _https://github.com/peterflynn/sloc-brackets_
+1. Choose _File > Extension Manager_ and select the _Available_ tab
+2. Search for this extension
 3. Click _Install_!
 
 

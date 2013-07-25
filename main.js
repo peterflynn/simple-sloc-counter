@@ -38,7 +38,7 @@ define(function (require, exports, module) {
         CommandManager          = brackets.getModule("command/CommandManager");
     
     
-    /* E.g., for Brackets core source:
+    /* E.g., for Brackets core-team-owned source:
             /extensions/dev/       (want to exclude any personal code...)
             /thirdparty/
             /3rdparty/
@@ -47,6 +47,15 @@ define(function (require, exports, module) {
             /unittest-files/
             /spec/JSUtils-test-files/
             /perf/OpenFile-perf-files/
+            
+        For Brackets runtime source:
+            /extensions/dev/
+            /node_modules/      (although leave out to include the Brackets-node process too)
+            /unittest-files/
+            /brackets/test/
+            /unittests.js
+            /unittest-files/
+            /test/
      */
     var filterStrings = [];
     
@@ -220,7 +229,7 @@ define(function (require, exports, module) {
     
     function beginCount() {
         var $textarea;
-        var message = "Exclude files/folders containing any of these substrings:<br><textarea id='sloc-excludes' style='width:400px;height:160px'>";
+        var message = "Exclude files/folders containing any of these substrings:<br><textarea id='sloc-excludes' style='width:400px;height:160px'></textarea>";
         Dialogs.showModalDialog(Dialogs.DIALOG_ID_ERROR, "JavaScript Lines of Code", message)
             .done(function (btnId) {
                 if (btnId === Dialogs.DIALOG_BTN_OK) {  // as opposed so dialog's "X" button
