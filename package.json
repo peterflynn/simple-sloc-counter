@@ -1,9 +1,9 @@
 {
     "name": "pflynn.sloc-counter",
-    "title": "JS Lines of Code Counter",
+    "title": "Lines of Code Counter for JavaScript",
     "homepage": "https://github.com/peterflynn/sloc-brackets",
     "author": "Peter Flynn",
     "version": "1.0.0",
     "engines": { "brackets": ">=0.15" },
-    "description": "Counts the number of JavaScript files, lines, and lines of code (SLOC - excluding whitespace/comments) in your project. Supports exclusions. To get started, choose \"View > Lines of Code Count\"."
+    "description": "Counts the number of JavaScript files, lines, and lines of code (\"SLOC\" - excluding whitespace/comments) in your project. Supports exclusions. To get started, choose \"View > Count Lines of Code\"."
 }

@@ -259,7 +259,7 @@ define(function (require, exports, module) {
     
     // Register command
     var COMMAND_ID = "pflynn.count_sloc";
-    CommandManager.register("Lines of JS Code Count", COMMAND_ID, beginCount);
+    CommandManager.register("Count Lines of Code", COMMAND_ID, beginCount);
     
     var menu = Menus.getMenu(Menus.AppMenuBar.VIEW_MENU);
     menu.addMenuItem(COMMAND_ID, null, Menus.LAST);
