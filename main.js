@@ -37,6 +37,9 @@ define(function (require, exports, module) {
         Menus                   = brackets.getModule("command/Menus"),
         CommandManager          = brackets.getModule("command/CommandManager");
     
+    // Extension modules
+    var Counter                 = require("Counter");
+    
     
     /* E.g., for Brackets core-team-owned source:
             /extensions/dev/       (want to exclude any personal code...)
@@ -68,72 +71,6 @@ define(function (require, exports, module) {
             }
         }
         return true;
-    }
-    
-    
-    /** Quick way to bail early from _countSloc() */
-    function Unsupported(msg, lineNum) { this.message = msg; this.lineNum = lineNum; }
-    Unsupported.prototype = new Error();
-    
-    
-    /**
-     * Counts lines of code in given text.
-     * @return {{total: number, sloc: number}}
-     */
-    function _countSloc(text) {
-        // TODO: split on /\r\n/g so we can call getText(true) for speed?
-        var lines = text.split("\n");
-        
-        var codeLines = 0;
-        var inBlockComment = false;
-        lines.forEach(function (line, lineNum) {
-            function unsupported(msg) {
-                throw new Unsupported(msg, lineNum);
-            }
-            
-            if (inBlockComment) {
-                var commentEnd = line.indexOf("*/");
-                if (commentEnd !== -1) {
-                    inBlockComment = false;
-                    if (line.substr(commentEnd + 2).trim() !== "") {
-                        unsupported("Code on same line as end of multi-line block comment");
-                    }
-                }
-            } else {
-                if (line.match(/^\s*$/)) {
-                    // whitespace
-                } else if (line.match(/^\s*\/\//)) {
-                    // line comment
-                } else if (line.indexOf("/*") !== -1) {
-                    var commentStart = line.indexOf("/*");
-                    var beforeCommentStart = line.substring(0, commentStart);
-                    if (beforeCommentStart.trim() !== "") {
-                        codeLines++;  // block comment after some code still counts as a line of code: e.g. 'foo(); /* call foo */'
-                        if (beforeCommentStart.indexOf("\"") !== -1 || beforeCommentStart.indexOf("'") !== -1) {
-                            unsupported("Block comment token that may be inside a string literal");
-                        }
-                        if (line.indexOf("*/") === -1) {
-                            unsupported("Code on same line as start of multi-line block comment");
-                        }
-                        
-                    }
-                    if (line.indexOf("*/") === -1) {
-                        inBlockComment = true;
-                    }
-                    if (line.indexOf("//") !== -1) {
-                        unsupported("Mixing block and line comments on one line");
-                    }
-                    if (line.indexOf("/*", commentStart + 2) !== -1) {
-                        unsupported("Multiple block comments per line");
-                    }
-                } else {
-                    codeLines++;
-                }
-            }
-        });
-        
-            
-        return { total: lines.length, sloc: codeLines };
     }
     
     
@@ -171,14 +108,14 @@ define(function (require, exports, module) {
                                 var text = doc.getText();
                                 
                                 try {
-                                    var lineCounts = _countSloc(text);
+                                    var lineCounts = Counter.countSloc(text);
                                     totalLines += lineCounts.total;
                                     totalSloc += lineCounts.sloc;
                                     totalBytes += text.length;
                                     totalFiles++;
                                         
                                 } catch (err) {
-                                    if (err instanceof Unsupported) {
+                                    if (err instanceof Counter.Unsupported) {
                                         warnings.push({ reason: err.message, fullPath: fileInfo.fullPath, lineNum: err.lineNum });
                                     } else {
                                         var wrap = new Error("Rethrowing: " + err.message);
