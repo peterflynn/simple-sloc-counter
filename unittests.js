@@ -21,7 +21,7 @@
  */
 
 
-/*jslint vars: true, plusplus: true, devel: true, browser: true, nomen: true, indent: 4, maxerr: 50 */
+/*jslint vars: true, plusplus: true, devel: true, browser: true, nomen: true, indent: 4 */
 /*global define, describe, it, expect, beforeEach, afterEach, waitsFor, runs, brackets, waitsForDone */
 
 define(function (require, exports, module) {
@@ -47,7 +47,7 @@ define(function (require, exports, module) {
     }
     
 
-    describe("SLOC counting", function () {
+    describe("[pf] SLOC counting", function () {
 
         it("handle empty files", function () {
             var code = "";
@@ -61,7 +61,7 @@ define(function (require, exports, module) {
                 "baz();";
             expectCount(code, 3, 3);
         });
-        it("ignore newline at EOF", function () {
+        it("don't count newline at EOF", function () {
             var code =
                 "foo();\n" +
                 "bar();\n";
@@ -109,20 +109,19 @@ define(function (require, exports, module) {
                 "baz();";
             expectCount(code, 3, 3);
         });
-//        it("count line starting in single-line block comment", function () { // FIXME BUG
-//            var code =
-//                "foo();\n" +
-//                "/* comment */ bar();\n" +
-//                "baz();";
-//            expectCount(code, 3, 3);
-//        });
+        it("count line starting in single-line block comment", function () {
+            var code =
+                "foo();\n" +
+                "/* comment */ bar();\n" +
+                "baz();";
+            expectCount(code, 3, 3);
+        });
         it("count code sandwiched between single-line block comment", function () {
             var code =
                 "foo();\n" +
                 "/* comment */ bar(); /* comment B */\n" +
                 "baz();";
-//            expectCount(code, 3, 3);
-            expectUnsupported(code);
+            expectCount(code, 3, 3);
         });
         it("ignore single-line block comment", function () {
             var code =
@@ -136,8 +135,7 @@ define(function (require, exports, module) {
                 "foo();\n" +
                 "/* comment 1 */ /* comment 2 */\n" +
                 "baz();";
-//            expectCount(code, 3, 2);
-            expectUnsupported();
+            expectCount(code, 3, 2);
         });
         it("ignore two-line block comment", function () {
             var code =
@@ -164,8 +162,7 @@ define(function (require, exports, module) {
                 "   comment 2\n" +
                 "   comment 3 */\n" +
                 "baz();";
-//            expectCount(code, 5, 3);
-            expectUnsupported(code);
+            expectCount(code, 5, 3);
         });
         it("count line starting with end of block comment", function () {
             var code =
@@ -174,8 +171,7 @@ define(function (require, exports, module) {
                 "   comment 2\n" +
                 "   comment 3 */ bar();\n" +
                 "baz();";
-//            expectCount(code, 5, 3);
-            expectUnsupported(code);
+            expectCount(code, 5, 3);
         });
         it("count line sandwiched between block comments", function () {
             var code =
@@ -186,17 +182,15 @@ define(function (require, exports, module) {
                 "   comment 2B\n" +
                 "   comment 3B */\n" +
                 "baz();";
-//            expectCount(code, 7, 3);
-            expectUnsupported(code);
+            expectCount(code, 7, 3);
         });
         
         it("ignore entire block comment inside string", function () {
             var code =
                 "foo();\n" +
                 "bar('/* foo */');\n" +
-                "baz();\n";
-//            expectCount(code, 6, 4);
-            expectUnsupported(code);
+                "baz();";
+            expectCount(code, 3, 3);
         });
         it("ignore block comment start inside string", function () {
             var code =
@@ -206,8 +200,7 @@ define(function (require, exports, module) {
                 "/* comment 1\n" +
                 "   comment 2 */\n" +
                 "baz();";
-//            expectCount(code, 6, 4);
-            expectUnsupported(code);
+            expectCount(code, 6, 4);
             
             code =
                 "foo();\n" +
@@ -216,55 +209,49 @@ define(function (require, exports, module) {
                 "/* comment 1\n" +
                 "   comment 2 */\n" +
                 "baz();";
-//            expectCount(code, 6, 4);
-            expectUnsupported(code);
+            expectCount(code, 6, 4);
         });
-        it("ignore block comment end inside string", function () {
+        it("find block comment end inside 'string'", function () {
             var code =
                 "foo();\n" +
                 "/* comment 1\n" +
-                "bar('*/');\n" +
-                "   comment 2\n" +
-                "   comment 3 */\n" +
-                "baz();";
-//            expectCount(code, 6, 2);
-            expectUnsupported(code);
+                "bar('...*/\n" +
+                "baz1();\n" +
+                "baz2('*/')\n" +
+                "baz3();";
+            expectCount(code, 6, 4);
         });
         it("understand escaped quotes", function () {
             var code =
                 "foo();\n" +
-                "/* comment 1\n" +
-                "bar('\\'*/');\n" +
-                "   comment 2\n" +
-                "   comment 3 */\n" +
+                "bar('\\'/*');\n" +
+                "realCode();\n" +
+                " /* comment 2\n" +
+                "    comment 3 */\n" +
                 "baz();";
-//            expectCount(code, 6, 2);
-            expectUnsupported(code);
+            expectCount(code, 6, 4);
             
             code = code.replace(/'/g, '"');
-//            expectCount(code, 6, 2);
-            expectUnsupported(code);
+            expectCount(code, 6, 4);
         });
         it("don't misunderstand nested differing quotes", function () {
             var code =
                 "foo();\n" +
-                "/* comment 1\n" +
-                "bar('\"*/');\n" +
-                "   comment 2\n" +
-                "   comment 3 */\n" +
+                "bar('\"/*');\n" +
+                "realCode();\n" +
+                " /* comment 2\n" +
+                "    comment 3 */\n" +
                 "baz();";
-//            expectCount(code, 6, 2);
-            expectUnsupported(code);
+            expectCount(code, 6, 4);
             
             code =
                 "foo();\n" +
-                "/* comment 1\n" +
-                "bar(\"'*/\");\n" +
-                "   comment 2\n" +
-                "   comment 3 */\n" +
+                "bar(\"'/*\");\n" +
+                "realCode();\n" +
+                " /* comment 2\n" +
+                "    comment 3 */\n" +
                 "baz();";
-//            expectCount(code, 6, 2);
-            expectUnsupported(code);
+            expectCount(code, 6, 4);
         });
         
         it("ignore block comment start inside block comment", function () {
@@ -282,8 +269,7 @@ define(function (require, exports, module) {
                 "foo();\n" +
                 "/* comment 1 /* still comment 1 */\n" +
                 "baz();";
-//            expectCount(code, 3, 2);
-            expectUnsupported(code);
+            expectCount(code, 3, 2);
         });
         it("ignore block comment start inside line comment", function () {
             var code =
@@ -291,8 +277,7 @@ define(function (require, exports, module) {
                 "bar();  // comment 1 /* still comment 1\n" +
                 "realCode();\n" +
                 "baz();";
-//            expectCount(code, 6, 2);
-            expectUnsupported(code);
+            expectCount(code, 4, 4);
         });
         it("*don't* ignore block comment end inside line comment", function () {
             var code =
@@ -304,6 +289,26 @@ define(function (require, exports, module) {
         });
         
         
+        it("ignore quote inside regexp", function () {
+            var code;
+            code =
+                "foo();\n" +
+                "bar(/'/); /* comment 1\n" +
+                "  comment 2\n" +
+                "  comment 3 */\n" +
+                "baz();";
+//            expectCount(code, 5, 3);
+            expectUnsupported(code);
+            
+            code =
+                "foo();\n" +
+                "bar(/'/); /* ' comment 1\n" +
+                "  comment 2\n" +
+                "  comment 3 */\n" +
+                "baz();";
+//            expectCount(code, 5, 3);
+            expectUnsupported(code);
+        });
         it("ignore block comment start inside regexp", function () {
             var code;
             code =
@@ -337,7 +342,7 @@ define(function (require, exports, module) {
                 "baz();";
 //            expectCount(code, 6, 4);
             expectUnsupported(code);
-            
+          
             code =
                 "foo();\n" +
                 "bar(/xyz\\/xyz\\/* foo/);\n" +
@@ -352,12 +357,12 @@ define(function (require, exports, module) {
         
         it("flag code with unclosed block comment", function () {
             var code;
-//            code =
-//                "foo();\n" +
-//                "/* comment 1\n" +
-//                "realCode();\n" +
-//                "baz();";
-//            expectUnsupported(code);
+            code =
+                "foo();\n" +
+                "/* comment 1\n" +
+                "realCode();\n" +
+                "baz();";
+            expectUnsupported(code);
             
             code =
                 "foo();\n" +
@@ -367,37 +372,37 @@ define(function (require, exports, module) {
             expectUnsupported(code);
         });
         it("flag code with unexpected block comment end", function () {
-//            var code =
-//                "foo();\n" +
-//                "bar();*/\n" +
-//                "baz();";
-//            expectUnsupported(code);
+            var code =
+                "foo();\n" +
+                "bar();*/\n" +
+                "baz();";
+            expectUnsupported(code);
         });
         it("flag code with unclosed string", function () {
             var code;
-//            code =
-//                "foo('string);\n" +
-//                "realCode();\n" +
-//                "baz();";
-//            expectUnsupported(code);
+            code =
+                "foo('string);\n" +
+                "realCode();\n" +
+                "baz();";
+            expectUnsupported(code);
             
-//            code =
-//                "foo(\"string);\n" +
-//                "realCode();\n" +
-//                "baz();";
-//            expectUnsupported(code);
+            code =
+                "foo(\"string);\n" +
+                "realCode();\n" +
+                "baz();";
+            expectUnsupported(code);
             
-//            code =
-//                "foo('string);\n" +
-//                "realCode(');\n" +
-//                "baz();";
-//            expectUnsupported(code);
+            code =
+                "foo('string);\n" +
+                "realCode(');\n" +
+                "baz();";
+            expectUnsupported(code);
             
-//            code =
-//                "foo(\"string);\n" +
-//                "realCode(\");\n" +
-//                "baz();";
-//            expectUnsupported(code);
+            code =
+                "foo(\"string);\n" +
+                "realCode(\");\n" +
+                "baz();";
+            expectUnsupported(code);
         });
         it("don't mis-flag code with ES5 string wrap", function () {
             var code;
@@ -413,13 +418,13 @@ define(function (require, exports, module) {
                 "baz();";
             expectCount(code, 3, 3);
         });
-        it("flag code with unclosed regexp", function () {
+//        it("flag code with unclosed regexp", function () {
 //            var code =
 //                "foo(/string);\n" +
 //                "realCode();\n" +
 //                "baz();";
 //            expectUnsupported(code);
-        });
+//        });
         
     }); // top-level describe()
     
