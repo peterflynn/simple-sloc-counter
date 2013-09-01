@@ -5,8 +5,8 @@ third-party code such as jQuery by specifying file / folder names.
 
 To get started, just choose _View > Lines of Code Count_.
 
-_Limitations:_ currently uses a fairly quick and dirty way to check for comments. In cases where this simple implementation can't
-be sure whether code is a comment or not, the file will be omitted from the count and you'll see a warning at the end.
+Due to JS regular expression syntax being insane, in rare cases the counter can't be sure whether code is a comment or not.
+In these cases the file will be omitted from the count and you'll see a warning message.
 
 How to Install
 ==============

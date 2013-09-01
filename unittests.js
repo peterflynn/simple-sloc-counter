@@ -290,6 +290,7 @@ define(function (require, exports, module) {
         
         
         it("ignore quote inside regexp", function () {
+            // Actually just flagged for now (due to /*), since regexps aren't really supported
             var code;
             code =
                 "foo();\n" +
@@ -310,6 +311,7 @@ define(function (require, exports, module) {
             expectUnsupported(code);
         });
         it("ignore block comment start inside regexp", function () {
+            // Actually just flagged for now (due to /*), since regexps aren't really supported
             var code;
             code =
                 "foo();\n" +
@@ -332,6 +334,7 @@ define(function (require, exports, module) {
             expectUnsupported(code);
         });
         it("ignore escaped regexp end", function () {
+            // Actually just flagged for now (due to /*), since regexps aren't really supported
             var code;
             code =
                 "foo();\n" +
@@ -354,6 +357,172 @@ define(function (require, exports, module) {
             expectUnsupported(code);
         });
         
+        
+        // Regular expressions ----------------------------------------------------------------------------------------
+        
+        // We can't parse regexps correctly, so we need to reliably warn whenever the code after a (non-comment) "/"
+        // is important for understanding subsequent lines.
+        
+        it("flag block comment start after possible regexp", function () {
+            var code;
+            code =
+                "foo();\n" +
+                "bar(/xyz/); /* real comment */\n" +
+                "baz();";
+            expectUnsupported(code);
+            
+            code =  // expected false positive
+                "foo();\n" +
+                "bar(1/3); /* real comment */\n" +
+                "baz();";
+            expectUnsupported(code);
+            
+            code =
+                "foo();\n" +
+                "bar(/xyz/); /* real comment\n" +
+                " comment 2 */\n" +
+                "baz();";
+            expectUnsupported(code);
+        });
+        it("flag string start after possible regexp only if line ends in ", function () {
+            var code;
+            code =
+                "foo();\n" +
+                "bar(/xyz/); baz(' string\\\n" +
+                " still string');\n" +
+                "last();";
+            expectUnsupported(code);
+            
+            code = code.replace(/'/g, "\"");
+            expectUnsupported(code);
+            
+            code =
+                "foo();\n" +
+                "bar(/xyz/); baz('string');\n" +
+                "last();";
+            expectCount(code, 3, 3);
+            
+            code = code.replace(/'/g, "\"");
+            expectCount(code, 3, 3);
+            
+            code =  // expected regexp false positive
+                "foo();\n" +
+                "bar(1/3); baz(' string\\\n" +
+                " still string');\n" +
+                "last();";
+            expectUnsupported(code);
+            
+            code = code.replace(/'/g, "\"");
+            expectUnsupported(code);
+            
+            code =  // expected regexp false positive
+                "foo();\n" +
+                "bar(1/3); baz('string');\n" +
+                "last();";
+            expectCount(code, 3, 3);
+            
+            code = code.replace(/'/g, "\"");
+            expectCount(code, 3, 3);
+            
+            code =  // inside regexp
+                "foo();\n" +
+                "bar(/'/); \\\n" +
+                " still string');\n" +
+                "last();";
+            expectUnsupported(code);
+            
+            code = code.replace(/'/g, "\"");
+            expectUnsupported(code);
+            
+            code =  // inside regexp
+                "foo();\n" +
+                "bar(/'/);\n" +
+                "last();";
+            expectCount(code, 3, 3);
+            
+            code = code.replace(/'/g, "\"");
+            expectCount(code, 3, 3);
+        });
+        it("don't flag string BEFORE regexp", function () {
+            var code;
+            code =
+                "foo();\n" +
+                "bar('abc'); baz(/xyz/);\n" +
+                "last();";
+            expectCount(code, 3, 3);
+            
+            code = code.replace(/'/g, "\"");
+            expectCount(code, 3, 3);
+        });
+        it("don't flag block comment BEFORE regexp", function () {
+            var code;
+            code =
+                "foo();\n" +
+                "/* comment */ baz(/xyz/);\n" +
+                "last();";
+            expectCount(code, 3, 3);
+        });
+        it("don't flag block unexpected block comment end inside regexp", function () {
+            var code;
+            code =
+                "foo();\n" +
+                "baz(/.*/);\n" +
+                "last();";
+            expectCount(code, 3, 3);
+        });
+        it("don't flag line comment start after possible regexp", function () {
+            var code =
+                "foo();\n" +
+                "bar(/xyz/); // comment\n" +
+                "baz();";
+            expectCount(code, 3, 3);
+        });
+        it("don't flag possible regexps inside comments", function () {
+            var code;
+            code =
+                "foo();\n" +
+                "bar(); /* real /comment/ /* */\n" +
+                "baz();";
+            expectCount(code, 3, 3);
+            
+            code =
+                "foo();\n" +
+                "bar(); /* comment 1\n" +
+                "  comment /2/ /*\n" +
+                "  comment 3 */\n" +
+                "baz();";
+            expectCount(code, 5, 3);
+            
+            code =
+                "foo();\n" +
+                "bar(); // real /line/ comment /*\n" +
+                "baz();";
+            expectCount(code, 3, 3);
+        });
+        it("don't flag possible regexps inside strings", function () {
+            var code;
+            code =
+                "foo();\n" +
+                "bar('string /content/ here'); /* foo */\n" +
+                "baz();";
+            expectCount(code, 3, 3);
+            
+            code = code.replace(/'/g, "\"");
+            expectCount(code, 3, 3);
+            
+            code =
+                "foo();\n" +
+                "bar('string \\\n" +
+                "  /content/ here'); /* foo */\n" +
+                "baz();";
+            expectCount(code, 4, 4);
+            
+            code = code.replace(/'/g, "\"");
+            expectCount(code, 4, 4);
+        });
+        
+        
+        // Sanity checks ----------------------------------------------------------------------------------------------
         
         it("flag code with unclosed block comment", function () {
             var code;
@@ -418,7 +587,7 @@ define(function (require, exports, module) {
                 "baz();";
             expectCount(code, 3, 3);
         });
-//        it("flag code with unclosed regexp", function () {
+//        it("flag code with unclosed regexp", function () { -- regexps not really supported, see flagging cases above
 //            var code =
 //                "foo(/string);\n" +
 //                "realCode();\n" +
