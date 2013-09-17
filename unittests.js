@@ -384,11 +384,21 @@ define(function (require, exports, module) {
                 "baz();";
             expectUnsupported(code);
         });
-        it("flag string start after possible regexp only if line ends in ", function () {
+        it("flag string start after possible regexp only if line ends in '\\'", function () {
             var code;
             code =
                 "foo();\n" +
                 "bar(/xyz/); baz(' string\\\n" +
+                " still string');\n" +
+                "last();";
+            expectUnsupported(code);
+            
+            code = code.replace(/'/g, "\"");
+            expectUnsupported(code);
+            
+            code =
+                "foo();\n" +
+                "bar(/xyz/); baz(' string\\    \n" +  // trailing whitespace shouldn't have any effect
                 " still string');\n" +
                 "last();";
             expectUnsupported(code);

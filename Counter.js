@@ -40,6 +40,7 @@ define(function (require, exports, module) {
     
     /**
      * Counts lines of code in given text.
+     * Throws 'Unsupported' exception in cases where it's not possible to give an accurate count.
      * @return {{total: number, sloc: number}}
      */
     function countSloc(text) {
@@ -99,7 +100,8 @@ define(function (require, exports, module) {
                                 if (line.indexOf("/*", i + 1) !== -1) {
                                     unsupported("Potential block comment start following potential regular expression on same line", lineNum);
                                 } else if (line.indexOf("\"", i + 1) !== -1 || line.indexOf("'", i + 1) !== -1) {
-                                    if (line[line.length - 1] === "\\") {
+                                    var trimmed = line.trim();
+                                    if (trimmed[trimmed.length - 1] === "\\") {
                                         unsupported("Potential multi-line string literal following potential regular expression on same line", lineNum);
                                     }
                                 }
