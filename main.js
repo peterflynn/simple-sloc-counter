@@ -30,7 +30,7 @@ define(function (require, exports, module) {
     // Brackets modules
     var DocumentManager         = brackets.getModule("document/DocumentManager"),
         EditorManager           = brackets.getModule("editor/EditorManager"),
-        FileIndexManager        = brackets.getModule("project/FileIndexManager"),
+        ProjectManager          = brackets.getModule("project/ProjectManager"),
         StatusBar               = brackets.getModule("widgets/StatusBar"),
         Async                   = brackets.getModule("utils/Async"),
         Dialogs                 = brackets.getModule("widgets/Dialogs"),
@@ -62,8 +62,8 @@ define(function (require, exports, module) {
      */
     var filterStrings = [];
     
-    function filter(fileInfo) {
-        var path = fileInfo.fullPath;
+    function filter(file) {
+        var path = file.fullPath;
         var i;
         for (i = 0; i < filterStrings.length; i++) {
             if (path.indexOf(filterStrings[i]) !== -1) {
@@ -89,21 +89,21 @@ define(function (require, exports, module) {
         // Code based on FileIndexManager & a bit of JSUtils
         
         StatusBar.showBusyIndicator(true);
-        FileIndexManager.getFileInfoList("all")
+        ProjectManager.getAllFiles()
             .done(function (fileListResult) {
                 
-                var jsFiles = fileListResult.filter(function (fileInfo) {
-                    return (/\.js$/i).test(fileInfo.fullPath);
+                var jsFiles = fileListResult.filter(function (file) {
+                    return (/\.js$/i).test(file.fullPath);
                 });
                 
-                Async.doInParallel(jsFiles, function (fileInfo) {
+                Async.doInParallel(jsFiles, function (file) {
                     var result = new $.Deferred();
                     
-                    if (!filter(fileInfo)) {
+                    if (!filter(file)) {
                         result.resolve();
                     } else {
                         // Search one file
-                        DocumentManager.getDocumentForPath(fileInfo.fullPath)
+                        DocumentManager.getDocumentForPath(file.fullPath)
                             .done(function (doc) {
                                 var text = doc.getText();
                                 
@@ -116,7 +116,7 @@ define(function (require, exports, module) {
                                         
                                 } catch (err) {
                                     if (err instanceof Counter.Unsupported) {
-                                        warnings.push({ reason: err.message, fullPath: fileInfo.fullPath, lineNum: err.lineNum });
+                                        warnings.push({ reason: err.message, fullPath: file.fullPath, lineNum: err.lineNum });
                                     } else {
                                         var wrap = new Error("Rethrowing: " + err.message);
                                         wrap.innerException = err;
@@ -129,7 +129,7 @@ define(function (require, exports, module) {
                             .fail(function (error) {
                                 // Error reading this file
                                 // Resolve anyway so we can still do a partial count
-                                warnings.push({ reason: "Unable to read file", fullPath: fileInfo.fullPath });
+                                warnings.push({ reason: "Unable to read file", fullPath: file.fullPath });
                                 result.resolve();
                             });
                     }
@@ -174,8 +174,7 @@ define(function (require, exports, module) {
                     filterStrings = substrings.split("\n");
                     filterStrings = filterStrings.map(function (substr) {
                         return substr.trim();
-                    });
-                    filterStrings = filterStrings.filter(function (substr) {
+                    }).filter(function (substr) {
                         return substr !== "";
                     });
                     
