@@ -1,7 +1,7 @@
 {
     "name": "pflynn.sloc-counter",
     "title": "Lines of Code Counter for JavaScript",
-    "homepage": "https://github.com/peterflynn/sloc-brackets",
+    "homepage": "https://github.com/peterflynn/simple-sloc-counter",
     "author": "Peter Flynn",
     "version": "1.1.1",
     "engines": { "brackets": ">=0.34" },
