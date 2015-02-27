@@ -28,9 +28,11 @@ define(function (require, exports, module) {
     "use strict";
     
     // Brackets modules
-    var DocumentManager         = brackets.getModule("document/DocumentManager"),
+    var _                       = brackets.getModule("thirdparty/lodash"),
+        DocumentManager         = brackets.getModule("document/DocumentManager"),
         EditorManager           = brackets.getModule("editor/EditorManager"),
         ProjectManager          = brackets.getModule("project/ProjectManager"),
+        PreferencesManager      = brackets.getModule("preferences/PreferencesManager"),
         StatusBar               = brackets.getModule("widgets/StatusBar"),
         Async                   = brackets.getModule("utils/Async"),
         Dialogs                 = brackets.getModule("widgets/Dialogs"),
@@ -40,6 +42,19 @@ define(function (require, exports, module) {
     // Extension modules
     var Counter                 = require("Counter");
     
+    
+    var prefs = PreferencesManager.getExtensionPrefs("pflynn.sloc-counter");
+    prefs.definePreference("exclusions", "Array", []);
+    
+    /**
+     * Want to use the current project's settings even if user happens to have a file from outside the project open. Just passing
+     * CURRENT_PROJECT should be enough, but it's not - https://github.com/adobe/brackets/pull/10422#issuecomment-73654748
+     */
+    function projPrefsContext() {
+        var context = _.cloneDeep(PreferencesManager.CURRENT_PROJECT);
+        context.path = ProjectManager.getProjectRoot().fullPath;
+        return context;
+    }
     
     /* E.g., for Brackets core-team-owned source:
             /extensions/dev/       (want to exclude any personal code...)
@@ -164,33 +179,46 @@ define(function (require, exports, module) {
             });
     }
     
-    function beginCount() {
+    
+    function getExclusions() {
         var $textarea;
-        var message = "Exclude files/folders containing any of these substrings:<br><textarea id='sloc-excludes' style='width:400px;height:160px'></textarea>";
-        Dialogs.showModalDialog(Dialogs.DIALOG_ID_ERROR, "JavaScript Lines of Code", message)
-            .done(function (btnId) {
-                if (btnId === Dialogs.DIALOG_BTN_OK) {  // as opposed so dialog's "X" button
-                    var substrings = $textarea.val();
-                    filterStrings = substrings.split("\n");
-                    filterStrings = filterStrings.map(function (substr) {
-                        return substr.trim();
-                    }).filter(function (substr) {
-                        return substr !== "";
-                    });
-                    
-                    countAllFiles();
-                }
-            });
+        
+        var message = "Exclude files/folders containing any of these substrings (one per line):<br><textarea id='sloc-excludes' style='width:400px;height:160px'></textarea>";
+        var promise = Dialogs.showModalDialog(Dialogs.DIALOG_ID_ERROR, "JavaScript Lines of Code", message);
+        
+        promise.done(function (btnId) {
+            if (btnId === Dialogs.DIALOG_BTN_OK) {  // as opposed to dialog's "X" button
+                var substrings = $textarea.val();
+                filterStrings = substrings.split("\n");
+                filterStrings = filterStrings.map(function (substr) {
+                    return substr.trim();
+                }).filter(function (substr) {
+                    return substr !== "";
+                });
+                
+                // Save to project-specific prefs if setting exists there; else global prefs
+                prefs.set("exclusions", filterStrings, {context: projPrefsContext()});
+            }
+        });
         
         // store now since it'll be orphaned by the time done() handler runs
         $textarea = $("#sloc-excludes");
         
         // prepopulate with last-used filter within session
-        // TODO: save/restore last-used string in prefs
-        $textarea.val(filterStrings.join("\n"));
+        $textarea.val(prefs.get("exclusions", projPrefsContext()).join("\n"));
         $textarea.focus();
+        
+        return promise;
     }
     
+    function beginCount() {
+        getExclusions().done(function (btnId) {
+            if (btnId !== Dialogs.DIALOG_BTN_OK) {  // i.e. dialog's "X" button
+                return;
+            }
+            countAllFiles();
+        });
+    }
     
     
     // Register command
