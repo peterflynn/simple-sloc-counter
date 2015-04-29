@@ -30,7 +30,7 @@ define(function (require, exports, module) {
     // Brackets modules
     var _                       = brackets.getModule("thirdparty/lodash"),
         DocumentManager         = brackets.getModule("document/DocumentManager"),
-        EditorManager           = brackets.getModule("editor/EditorManager"),
+        MainViewManager         = brackets.getModule("view/MainViewManager"),
         ProjectManager          = brackets.getModule("project/ProjectManager"),
         PreferencesManager      = brackets.getModule("preferences/PreferencesManager"),
         StatusBar               = brackets.getModule("widgets/StatusBar"),
@@ -174,7 +174,7 @@ define(function (require, exports, module) {
                         message += "</div>";
                         
                         Dialogs.showModalDialog(Dialogs.DIALOG_ID_ERROR, "JavaScript Lines of Code", message)
-                            .done(function () { EditorManager.focusEditor(); });
+                            .done(function () { MainViewManager.focusActivePane(); });
                     });
             });
     }
