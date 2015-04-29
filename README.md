@@ -23,4 +23,4 @@ To install extensions:
 MIT-licensed -- see `main.js` for details.
 
 ### Compatibility
-Brackets 0.37 or newer.
+Brackets 1.0 or newer.
